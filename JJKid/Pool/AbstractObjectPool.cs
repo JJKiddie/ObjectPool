@@ -9,6 +9,7 @@ namespace JJKid.Pool
 
         protected List<T> activePool;
         protected List<T> recycledPool;
+        protected List<T> iteratorContainer = null;
         protected int iteratorNextIndex = 0;
 
 
@@ -22,10 +23,16 @@ namespace JJKid.Pool
 
         public void destroy(dele_event cbf_destroy)
         {
+            if(this.iteratorContainer != null)
+                this.iteratorContainer.Clear();
+            this.iteratorContainer = null;
+
             for(int i = 0; i < this.activePool.Count; i++)
-                cbf_destroy?.Invoke(this.activePool[i]);
+                if(cbf_destroy != null)
+                    cbf_destroy(this.activePool[i]);
             for(int i = 0; i < this.recycledPool.Count; i++)
-                cbf_destroy?.Invoke(this.recycledPool[i]);
+                if(cbf_destroy != null)
+                    cbf_destroy(this.recycledPool[i]);
 
             this.activePool.Clear();
             this.activePool = null;
@@ -47,11 +54,21 @@ namespace JJKid.Pool
         {
             if(this.activePool.Contains(obj))
             {
-                cbf_recycle?.Invoke(obj);
+                if(cbf_recycle != null)
+                    cbf_recycle(obj);
 
                 this.recycledPool.Add(obj);
                 this.activePool.Remove(obj);
             }
+        }
+
+
+        //======================================================================
+        //  Getter
+        //======================================================================
+        public int Count
+        {
+            get { return this.activePool.Count; }
         }
 
 
@@ -65,12 +82,12 @@ namespace JJKid.Pool
 
         public bool hasNext()
         {
-            return (this.iteratorNextIndex < this.activePool.Count);
+            return (this.iteratorNextIndex < this.iteratorContainer.Count);
         }
 
         public T next()
         {
-            T obj = this.activePool[this.iteratorNextIndex];
+            T obj = this.iteratorContainer[this.iteratorNextIndex];
 
             this.iteratorNextIndex += 1;
 
@@ -79,6 +96,12 @@ namespace JJKid.Pool
 
         public IObjectIterator<T> getIterator()
         {
+            if(this.iteratorContainer == null)
+                this.iteratorContainer = new List<T>();
+            this.iteratorContainer.Clear();
+            for(int i = 0; i < this.activePool.Count; i++)
+                this.iteratorContainer.Add(this.activePool[i]);
+
             this.reset();
 
             return this;
