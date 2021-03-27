@@ -96,17 +96,26 @@ namespace JJKid.Pool
 
         public IObjectIterator<T> getIterator()
         {
-            if(this.iteratorContainer == null)
-                this.iteratorContainer = new List<T>();
-            this.iteratorContainer.Clear();
-            for(int i = 0; i < this.activePool.Count; i++)
-                this.iteratorContainer.Add(this.activePool[i]);
-
             this.reset();
+            this.prepareIteratorData();
 
             return this;
         }
 
+        private void prepareIteratorData()
+        {
+            if(this.iteratorContainer == null)
+                this.iteratorContainer = new List<T>();
+
+            this.iteratorContainer.Clear();
+            for(int i = 0; i < this.activePool.Count; i++)
+                this.iteratorContainer.Add(this.activePool[i]);
+        }
+
+
+        //======================================================================
+        //  Hack
+        //======================================================================
         public List<T> getPureList()
         {
             return this.activePool;
